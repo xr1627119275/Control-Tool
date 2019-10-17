@@ -1,8 +1,8 @@
 
 
 
-## 浏览器 控制端
-  # js 代码
+# 浏览器 控制端
+  ## js 代码
   ```js
     function Lianjie(name,ip){
       var ws = new WebSocket(ip);

@@ -91,8 +91,8 @@ application = tornado.web.Application([
 
 if __name__ == "__main__":
     # server = HTTPServer(application,ssl_options={
-    #   "certfile": os.path.join(os.path.abspath("."), "xurui.design.crt"),
-    #   "keyfile": os.path.join(os.path.abspath("."), "xurui.design.key"),
+    #   "certfile": os.path.join(os.path.abspath("."), "*.crt"),
+    #   "keyfile": os.path.join(os.path.abspath("."), "*.key"),
     # })
     application.listen(7998,address='0.0.0.0')
     # server.listen(7999,address='0.0.0.0')

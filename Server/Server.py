@@ -6,6 +6,10 @@ import tornado.web
 import datetime
 import re,json,os
 
+import configparser
+conf = configparser.ConfigParser()
+conf_path = os.path.dirname(os.path.realpath(__file__)) + "/config.ini"
+conf.read(conf_path)
 
 '''
 发送服务器命令

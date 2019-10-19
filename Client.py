@@ -4,10 +4,9 @@ import websocket
 import os,json,time,sys
 import requests
 import _thread
-import configparser
 from Email import SendEmail
 
-
+import configparser
 conf = configparser.ConfigParser()
 conf_path = os.path.dirname(os.path.realpath(__file__)) + "/config.ini"
 conf.read(conf_path)

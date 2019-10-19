@@ -4,15 +4,32 @@ import websocket
 import os,json,time,sys
 import requests
 import _thread
+import configparser
 from Email import SendEmail
 
-login = 'mibook'
+
+conf = configparser.ConfigParser()
+conf_path = os.path.dirname(os.path.realpath(__file__)) + "/config.ini"
+conf.read(conf_path)
+
+login = conf.get("Client", "login")
 if len(sys.argv) >= 2:
     login = sys.argv[1]
     
 
 closeConnent = 0
 errors = 0
+
+
+def upload(path):
+    return os.stat(path)
+
+def sendMsg(ws,msg,_form):
+    msg = json.dumps({
+        'content':_form+'<<result:\n'+msg,
+        'from': login
+    })
+    ws.send(msg.encode('utf8'))
 
 def on_message(ws, message):
     message = json.loads(message)
@@ -29,19 +46,35 @@ def on_message(ws, message):
         return
     if message['content'].startswith('work:'):
         os.chdir(message['content'][5:])
+        os.path.realpath
+        print(os.getcwd())
+        return 
+    if message['content'].startswith('upload:'):
+        path = message['content'][7:]
+        if os.path.isfile(path):
+            files = {'file': (os.path.basename(path), open(os.path.realpath(path), 'rb'))}
+            try:
+                result = requests.post(conf.get("Client", "UploadUrl"),files=files)
+                print(result.content)
+                if result.status_code==200:
+                    sendMsg(ws,result.content.decode('utf8'),message['from'])
+                else:
+                    sendMsg(ws,'上传失败 %d'%result.status_code,message['from'])
+            except Exception as e:
+                sendMsg(ws,'上传失败, %s'%str(e),message['from'])  
+
+        else:
+            sendMsg(ws,'不支持文件夹 or 无此文件',message['from'])
         return 
     elif message['content'].startswith('exec:'):
         execMsg = ''
        
         with os.popen(message['content'][5:]) as f:
             execMsg += f.read()
+        sendMsg(ws,execMsg,message['from'])
         # print(message['content'][5:])
-        print(execMsg)
-        msg = json.dumps({
-            'content':message['from']+'<<result:\n'+execMsg,
-            'from': login
-        })
-        ws.send(msg.encode('utf8'))
+        # print(execMsg)
+        
         return
     print(message['content'])
     
@@ -76,7 +109,7 @@ def main():
     #     print('2分钟后关机')
     #     return
     # errortime +=1
-    ws = websocket.WebSocketApp("ws://xurui.design:7998/",
+    ws = websocket.WebSocketApp(conf.get("Client", "Ws"),
                               on_message = on_message,
                               on_error = on_error,
                               on_close = on_close)

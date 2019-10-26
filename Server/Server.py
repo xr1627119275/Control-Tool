@@ -18,9 +18,29 @@ conf.read(conf_path)
   from: 'Server' 
 }
 '''
+class StaticFile(tornado.web.StaticFileHandler):  
+    def set_extra_headers(self, path):  
+        self.set_header("Cache-control", "no-cache")  
+
+class ServerHandler(tornado.web.RequestHandler):
+    uploadFilePath = os.path.join(conf.get('Server','uploadPath'),'')
+    def get(self):
+        self.write("请使用POST上传")
+    def post(self):
+        file_metas = self.request.files.get('file')
+        if file_metas == None:
+          self.write("上传失败")
+          return
+        for meta in file_metas:                                 #循环文件信息
+          file_name = meta['filename']                        #获取文件的名称                                         #引入os路径处理模块
+          if not os.path.exists(self.uploadFilePath):
+            os.mkdir(self.uploadFilePath)
+          with open(os.path.join(self.uploadFilePath,file_name),'wb') as up:            #os拼接文件保存路径，以字节码模式打开
+              up.write(meta['body'])
+        self.write("上传成功")
 
 users = set()
-class ChatHandler(tornado.websocket.WebSocketHandler):
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
   target = 'None'
   def check_origin(self, origin):  
       return True  
@@ -89,7 +109,8 @@ settings = {
 }
 
 application = tornado.web.Application([
-  ("/",ChatHandler)
+  ("/",WebSocketHandler),
+  ("/Upload",ServerHandler)
 ],**settings)
 
 

@@ -4,17 +4,35 @@ import websocket
 import os,json,time,sys
 import requests
 import _thread
+import getopt
+
+
 from Email import SendEmail
+
+
+
+
 
 import configparser
 conf = configparser.ConfigParser()
-conf_path = os.path.dirname(os.path.realpath(__file__)) + "/config.ini"
+conf_path = os.path.join(os.path.dirname(os.path.realpath(__file__)) , "config.ini")
+
+login = ''
+opts,args = getopt.getopt(sys.argv[1:],'c:u:')
+for opt in opts:
+    if opt[0] == '-c':
+        conf_path = opt[1]
+    if opt[0] == '-u':
+        login = opt[1]
+
 conf.read(conf_path)
 
-login = conf.get("Client", "login")
-if len(sys.argv) >= 2:
-    login = sys.argv[1]
-    
+
+if login=='':
+    login = conf.get("Client", "login")
+
+
+
 
 closeConnent = 0
 errors = 0

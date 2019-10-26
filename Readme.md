@@ -35,6 +35,9 @@
     this.SetToUser = function(name) {
       toUser = name
     }
+    this.send = function(content){
+		  ws.send(JSON.stringify({content:content,from:name}))
+	  }
     this._send = function(content){
       //ws.send(JSON.stringify({content:content,from:name}))
       ws.send(JSON.stringify(content))

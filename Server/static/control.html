@@ -136,11 +136,11 @@
     <template id="Termux">
       <div>
         <div style="margin: 20px 0 10px">
-          <button type="button" class="btn btn-primary" @click="ChangeMode('exec',$event)">执行命令</button>
-          <button type="button" class="btn btn-secondary" @click="ChangeMode('upload',$event)">上传模式</button>
-          <button type="button" class="btn btn-secondary" @click="ChangeMode('work',$event)">切换工作目录</button>
-          <button type="button" class="btn btn-success" @click="ChangeMode('im',$event)">IM 模式</button>
-          <button type="button" class="btn btn-success" @click="store.state.ws.send('ls')">查询用户</button>
+          <button type="button" style="margin-top:5px" class="btn btn-primary" @click="ChangeMode('exec',$event)">执行命令</button>
+          <button type="button" style="margin-top:5px" class="btn btn-secondary" @click="ChangeMode('upload',$event)">上传模式</button>
+          <button type="button" style="margin-top:5px" class="btn btn-secondary" @click="ChangeMode('work',$event)">切换工作目录</button>
+          <button type="button" style="margin-top:5px" class="btn btn-success" @click="ChangeMode('im',$event)">IM 模式</button>
+          <button type="button" style="margin-top:5px" class="btn btn-success" @click="store.state.ws.send('ls')">查询用户</button>
           
           <div class="alert alert-success" role="alert"  style="margin-top:10px">
             当前模式: <a href="javascript:;" class="alert-link">{{ModeText}}</a><br>

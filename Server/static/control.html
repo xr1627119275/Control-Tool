@@ -225,8 +225,8 @@
             store.state.isLogin = false
             this.show()
           }
-          // let msg = 'From: '+ data['from']+'\n'+ data['content'] 
-          let msg = data['content'] 
+          let msg = 'From: '+ data['from']+'\n'+ data['content'] 
+          // let msg = data['content'] 
           store.state.Message = msg
           console.log('LoginModal接收到信息: ',data)
           if(data['content'] == '登录成功') {

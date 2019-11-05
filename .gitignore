@@ -4,3 +4,4 @@ build
 dist
 *.spec
 rest.py
+static/*

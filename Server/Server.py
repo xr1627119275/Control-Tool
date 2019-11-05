@@ -22,10 +22,19 @@ class StaticFile(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):  
         self.set_header("Cache-control", "no-cache")  
 
+class ControlHandler(tornado.web.RequestHandler):
+    def get(self):
+        html = ''
+        with open('static/control.html') as f:
+          html += f.read()
+        # self.redirect('static/control.html')
+        self.write(html)
+
 class ServerHandler(tornado.web.RequestHandler):
     uploadFilePath = os.path.join(conf.get('Server','uploadPath'),'')
     def get(self):
         self.write("请使用POST上传")
+        
     def post(self):
         file_metas = self.request.files.get('file')
         if file_metas == None:
@@ -110,7 +119,8 @@ settings = {
 
 application = tornado.web.Application([
   ("/",WebSocketHandler),
-  ("/Upload",ServerHandler)
+  ("/Upload",ServerHandler),
+  ("/control",ControlHandler),
 ],**settings)
 
 

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+  <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+  <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+  <!-- bootstrap.bundle.min.js 用于弹窗、提示、下拉菜单，包含了 popper.min.js -->
+  <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+
+  <!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
+  <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <style>
+    html,#app,body{
+      width: 100%
+    }
+  </style>
+  <script>
+    function Lianjie(name, ip,callback) {
+      var ws = new WebSocket(ip);
+      var toUser = ''
+
+      ws.onopen = function () {
+        // Web Socket 已连接上，使用 send() 方法发送数据
+        ws.send(`${JSON.stringify({ "content": "login:" + name, from: name })}`);
+        console.log("数据发送中...");
+      };
+
+      ws.onmessage = function (evt) {
+        var received_msg = evt.data;
+        callback('msg',JSON.parse(received_msg))
+        console.log("From:" + JSON.parse(received_msg)['from']);
+        console.log(JSON.parse(received_msg)['content']);
+      }
+      ws.onclose = function () {
+        // 关闭 websocket
+        console.log("连接已关闭...");
+        console.log("2秒后重连...");
+
+        callback('close')
+        setTimeout(function () {
+          ws = new WebSocket(ip);
+        }, 2000)
+      };
+
+      this.SetToUser = function (name) {
+        toUser = name
+      }
+      this.send = function (content) {
+        ws.send(JSON.stringify({ content: content, from: name }))
+      }
+      this._send = function (content) {
+        //ws.send(JSON.stringify({content:content,from:name}))
+        ws.send(JSON.stringify(content))
+      }
+      this.exec = function (content) {
+        //ws.send(JSON.stringify({content:who+"<<exec:"+content,from:name}))
+        this._send({ content: toUser + "<<exec:" + content, from: name })
+      }
+      this.im = this.IM = function (content) {
+        this._send({ content: toUser + "<<IM:" + content, from: name })
+      }
+      this.work = function (content) {
+        this._send({ content: toUser + "<<work:" + content, from: name })
+      }
+      this.upload = function (content) {
+        this._send({ content: toUser + "<<upload:" + content, from: name })
+      }
+    }
+  </script>
+  <title>控制中心</title>
+</head>
+
+<body>
+  <div id="app">
+    <!-- <button @click='Showlogin'>登录</button> -->
+    <div class="row justify-content-md-center" style="margin:0">
+      <div class="col col-xl-10 col-lg-10 col-md-10 col-sm-12 col-12" style="box-sizing: border-box;">
+        <login-modal ref='loginmodal' ></login-modal>
+        <termux></termux>
+      </div>
+    </div>
+
+  </div>
+
+
+
+  <template id="LoginModal" >
+      <div class="modal" id="login" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">WebSocket服务器连接</h5>
+              <button type="button" class="close"  data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form class="form-row">
+                <div class="form-group col-md-12" >
+                    <div :class="['alert', alert.type]" v-if='alert.type' role="alert">
+                      {{alert.msg}}
+                    </div>
+                </div>
+                <div class="form-group col-md-2">
+                  <label for="xieyi">协议</label>
+                  <input type="text" class="form-control" id="xieyi" readonly v-model="xieyi">
+                </div>
+                <div class="form-group col-md-8">
+                  <label for="ip">WebSocket 地址或IP</label>
+                  <input type="text" class="form-control"  v-model="ip" placeholder="WebSocket地址">
+                </div>
+                <div class="form-group col-md-2">
+                  <label for="port">Port</label>
+                  <input type="text" class="form-control"  v-model="port" placeholder="Port">
+                </div>
+                <div class="form-group  col-md-12">
+                  <label for="user">用户ID</label>
+                  <input type="text" class="form-control"  v-model="user" placeholder="用户ID" v-on:keyup.enter='login'>
+                </div>
+                <div class="form-group col-md-12" style="text-align: center;">
+                  <button type="button" class="btn btn-primary" @click="login">登录</button>
+                </div>
+              </form>
+            </div>
+    
+          </div>
+        </div>
+      </div>
+    </template>
+    
+    <template id="Termux">
+      <div>
+        <div style="margin: 20px 0 10px">
+          <button type="button" class="btn btn-primary" @click="ChangeMode('exec',$event)">执行命令</button>
+          <button type="button" class="btn btn-secondary" @click="ChangeMode('upload',$event)">上传模式</button>
+          <button type="button" class="btn btn-secondary" @click="ChangeMode('work',$event)">切换工作目录</button>
+          <button type="button" class="btn btn-success" @click="ChangeMode('im',$event)">IM 模式</button>
+          <button type="button" class="btn btn-success" @click="store.state.ws.send('ls')">查询用户</button>
+          
+          <div class="alert alert-success" role="alert"  style="margin-top:10px">
+            当前模式: <a href="javascript:;" class="alert-link">{{ModeText}}</a><br>
+            命令用户: <a href="javascript:;" class="alert-link" :style="{color: replyuser==''?'red':'initial'}">{{replyuser || '请设置'}}</a>
+          </div>
+        </div>
+        <div style="height: 600px;padding: 20px;border: 2px solid #ccc;margin-bottom: 10px;overflow: auto;" id="messageBox">
+          <div v-for="item in Message">
+              <nav aria-label="breadcrumb">
+                  <ol class="breadcrumb">
+                    <pre style="color: #e83e8c">{{ item }}</pre>
+                  </ol>
+                </nav>
+          </div>
+        </div style=''>
+          <div class="form-row"  style="margin:0 0 5px 0">
+            <div class="col-md-10"  style="margin-bottom: 5px">
+              <input type="text" class="form-control" v-model='val_replyuser' v-on:keyup.enter='SetUser'>
+            </div>
+            <div class="col-md-2 col-sm-12">
+              <button type="button" style="width:100%" class="btn btn-primary" @click='SetUser'>设置命令用户ID</button>
+            </div>
+          </div>
+          <div class="form-row" style="margin:0">
+            <div class="col-md-10 col-sm-12" style="margin-bottom: 5px">
+              <input type="text" class="form-control" v-model='execinfo' v-on:keyup.enter='Send' >
+            </div>
+            <div class="col-md-2 col-sm-12">
+              <button type="button" style="width:100%" class="btn btn-primary" @click='Send'>发送</button>
+            </div>
+          </div>
+      </div>
+    </template>
+
+  <script>
+    var store = {
+      state: {
+        isLogin: false,
+        Message: ''
+      },
+      setMessageAction (newValue) {
+        if (this.debug) console.log('setMessageAction triggered with', newValue)
+        this.state.isLogin = newValue
+      }
+    }
+  </script>
+  <script>
+    
+    const LoginModal = {
+      el: '#LoginModal',
+      data() {
+        return {
+          xieyi: location.origin.startsWith('https')? 'wss://' : 'ws://',
+          ip: 'xurui.design',
+          port: '7998',
+          user: '',
+          alert: {
+            type: undefined,
+            msg: undefined
+          },
+          store: store
+        }
+      },
+      computed:{
+        address() {
+          if(this.xieyi == '' || this.ip == '' || this.port == '')
+            return false 
+          
+          return this.xieyi+this.ip+':'+this.port
+        } 
+      },
+      methods: {
+        show() {
+          this.alert.type = undefined
+          {
+            // [this.ip,this.port,this.user] = [ '', '' , '']
+          }
+          $('#login').modal('show')
+        },
+        callback(type,data){
+          if(type == 'close') {
+            store.state.isLogin = false
+            this.show()
+          }
+          // let msg = 'From: '+ data['from']+'\n'+ data['content'] 
+          let msg = data['content'] 
+          store.state.Message = msg
+          console.log('LoginModal接收到信息: ',data)
+          if(data['content'] == '登录成功') {
+            this.store.state.isLogin = true
+            this.store.state.ws.send('ls')
+            $('#login').modal('hide')
+          }
+
+        },
+        login() {
+          console.log('address: ',this.address)
+
+          if( (!this.address) || this.user.trim() == '') {
+            this.alert.type = 'alert-danger'
+            this.alert.msg = '错误！数据不能为空'
+            return
+          }
+
+          this.store.state.ws = new Lianjie(this.user,this.address,this.callback)
+
+        }
+      },
+      mounted(){
+        $('#login').on('hide.bs.modal', (e) => {
+
+          return this.store.state.isLogin
+        })
+      }
+    }
+
+    const Termux = {
+      el: '#Termux',
+      data(){
+        return {
+          store,
+          execinfo: '',
+          Message: [],
+          mode: 'exec',
+          ModeText: '执行命令',
+          val_replyuser: '',
+          replyuser: ''
+        }
+      },
+      watch:{
+        'store.state.Message'(val){
+          if(this.Message.length == 200 ){
+            this.Message = []
+          }
+          this.Message.push(val)
+          this.$nextTick(()=>{
+            $("#messageBox").scrollTop($("#messageBox")[0].scrollHeight)
+          })
+        }
+      },
+      methods: {
+        SetUser() {
+          this.store.state.ws.SetToUser(this.val_replyuser)
+          this.replyuser = this.val_replyuser
+        },
+        Send() {
+          if(this.replyuser=='') {
+            alert('请设置命令用户ID')
+            return 
+          }
+          console.log('execinfo: ',this.execinfo)
+          const val = this.execinfo
+          switch (this.mode) {
+            case 'exec':
+              this.store.state.ws.exec(val)
+              break
+            case 'work':
+              this.store.state.ws.work(val)
+              this.store.state.ws.exec('dir')
+              this.store.state.ws.exec('ls')
+              break
+            case 'upload':
+              this.store.state.ws.upload(val)
+              break
+            case 'im':
+              this.store.state.ws.im(val)
+              break
+          }
+        },
+        ChangeMode(mode,event) {
+          this.mode = mode
+          this.ModeText = event.target.innerText
+          // console.log(event)
+          
+        }
+      }
+    }
+
+
+    const app = new Vue({
+      el: '#app',
+      components: {
+        'login-modal': LoginModal,
+        'termux': Termux
+      },
+      data: {
+        store: store
+      },
+      watch: {
+        'store.isLogin'(val,newVal){
+          if (val == false && newVal == true ){
+            this.Showlogin()
+          }
+        }
+      },
+      methods: {
+        Showlogin() {
+          this.$refs['loginmodal'].show()
+        }
+      },
+      mounted(){
+        if (!store.isLogin) {
+          this.Showlogin()
+        }
+      }
+    })
+  </script>
+
+
+
+</body>
+
+</html>

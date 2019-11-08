@@ -79,6 +79,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         self.write_message(json.dumps({'content':content,'from':'Server'}).encode('utf8'))    
         return 0
 
+      if message == 'users':
+        content = []
+        for client in users:
+          content.append(client.target)
+        self.write_message(json.dumps({'content':content,'from':'Server'}).encode('utf8'))    
+        return 0
+
 
       if message.find('<<') != -1 :
         content = re.findall(r'(\S+?)<<(.+)',message,re.S)

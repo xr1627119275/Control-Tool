@@ -142,17 +142,17 @@
     
     <template id="Termux">
       <div style="display: flex;flex-direction: column;height: 100%;">
-        <div style="margin-top: 5px ">
-          <button type="button" style="margin-top:5px" class="btn btn-primary" @click="ChangeMode('exec',$event)">执行命令</button>
-          <button type="button" style="margin-top:5px" class="btn btn-secondary" @click="ChangeMode('upload',$event)">上传模式</button>
-          <button type="button" style="margin-top:5px" class="btn btn-secondary" @click="ChangeMode('work',$event)">切换工作目录</button>
-          <button type="button" style="margin-top:5px" class="btn btn-success" @click="ChangeMode('im',$event)">IM 模式</button>
-          <button type="button" style="margin-top:5px" class="btn btn-success" @click="store.state.ws.send('ls')">查询用户</button>
+        <div style="margin: 10px 0">
+          <button type="button" style="margin-top:5px" :class="['btn',mode == 'exec'?'btn-primary':'btn-secondary']" @click="ChangeMode('exec',$event)">执行命令</button>
+          <button type="button" style="margin-top:5px" :class="['btn',mode == 'upload'?'btn-primary':'btn-secondary' ]" @click="ChangeMode('upload',$event)">上传模式</button>
+          <button type="button" style="margin-top:5px" :class="['btn',mode == 'work'?'btn-primary':'btn-secondary' ]" @click="ChangeMode('work',$event)">切换工作目录</button>
+          <button type="button" style="margin-top:5px" :class="['btn',mode == 'im'?'btn-primary':'btn-secondary' ]" @click="ChangeMode('im',$event)">IM 模式</button>
+          <button type="button" style="margin-top:5px" :class="['btn','btn-success']" @click="store.state.ws.send('ls');store.state.ws.send('users')">查询用户</button>
           
-          <div class="alert alert-success" role="alert"  style="margin-top:10px">
+          <!-- <div class="alert alert-success" role="alert"  style="margin-top:10px">
             当前模式: <a href="javascript:;" class="alert-link">{{ModeText}}</a><br>
             命令用户: <a href="javascript:;" class="alert-link" :style="{color: replyuser==''?'red':'initial'}">{{replyuser || '请设置'}}</a>
-          </div>
+          </div> -->
         </div>
         <div style="flex: 1;padding: 20px;border: 2px solid #ccc;margin-bottom: 10px;overflow: auto;" id="messageBox">
           <div v-for="item in Message">
@@ -165,15 +165,16 @@
         </div style=''>
           <div class="form-row"  style="margin:0 0 5px 0">
             <div class="col-md-10"  style="margin-bottom: 5px">
-              <input type="text" class="form-control" v-model='val_replyuser' v-on:keyup.enter='SetUser'>
-            </div>
-            <div class="col-md-2 col-sm-12">
-              <button type="button" style="width:100%" class="btn btn-primary" @click='SetUser'>设置命令用户ID</button>
+              <select type="text" class="form-control" placeholder="选择用户" v-model='replyuser' v-on:keyup.enter='SetUser'>
+                <option v-if="store.state.users.length==0" value=''>当前无用户</option>
+                <option v-else :value="''">选择用户</option>
+                <option v-for="user in store.state.users" :value='user'>**********{{user}}**********</option>
+              </select>
             </div>
           </div>
           <div class="form-row" style="margin:0">
             <div class="col-md-10 col-sm-12" style="margin-bottom: 5px">
-              <input type="text" class="form-control" v-model='execinfo' v-on:keyup.enter='Send' >
+              <input type="text" class="form-control" v-model='execinfo' placeholder="消息内容" v-on:keyup.enter='Send' >
             </div>
             <div class="col-md-2 col-sm-12">
               <button type="button" style="width:100%" class="btn btn-primary" @click='Send'>发送</button>
@@ -186,7 +187,8 @@
     var store = {
       state: {
         isLogin: false,
-        Message: ''
+        Message: '',
+        users: []
       },
       setMessageAction (newValue) {
         if (this.debug) console.log('setMessageAction triggered with', newValue)
@@ -232,13 +234,20 @@
             store.state.isLogin = false
             this.show()
           }
+
+          if(Array.isArray( data['content'] )) {
+            this.store.state.users = data['content']
+            return
+          }
           let msg = 'From: '+ data['from']+'\n'+ data['content'] 
           // let msg = data['content'] 
+          if(data['content'])
           store.state.Message = msg
           console.log('LoginModal接收到信息: ',data)
           if(data['content'] == '登录成功') {
             this.store.state.isLogin = true
             this.store.state.ws.send('ls')
+            this.store.state.ws.send('users')
             $('#login').modal('hide')
           }
 
@@ -279,12 +288,14 @@
       },
       watch:{
         'store.state.Message'(val){
+          if(val == '') return
           if(this.Message.length == 200 ){
             this.Message = []
           }
           this.Message.push(val)
           this.$nextTick(()=>{
             $("#messageBox").scrollTop($("#messageBox")[0].scrollHeight)
+            store.state.Message = ''
           })
         }
       },

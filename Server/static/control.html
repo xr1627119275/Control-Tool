@@ -306,6 +306,8 @@
           this.replyuser = this.val_replyuser
         },
         Send() {
+          // console.log(this.replyuser)
+          this.store.state.ws.SetToUser(this.replyuser)
           if(this.replyuser=='') {
             alert('请设置命令用户ID')
             return 

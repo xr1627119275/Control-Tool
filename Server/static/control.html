@@ -16,7 +16,14 @@
   <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
   <style>
     html,#app,body{
-      width: 100%
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #app {
+
     }
   </style>
   <script>
@@ -78,10 +85,10 @@
 <body>
   <div id="app">
     <!-- <button @click='Showlogin'>登录</button> -->
-    <div class="row justify-content-md-center" style="margin:0">
-      <div class="col col-xl-10 col-lg-10 col-md-10 col-sm-12 col-12" style="box-sizing: border-box;">
+    <div class="row justify-content-md-center" style="margin:0;height: 100%;">
+      <div class="col col-xl-10 col-lg-10 col-md-10 col-sm-12 col-12" style="box-sizing: border-box;height: 100%;">
         <login-modal ref='loginmodal' ></login-modal>
-        <termux></termux>
+        <termux ></termux>
       </div>
     </div>
 
@@ -134,7 +141,7 @@
     </template>
     
     <template id="Termux">
-      <div>
+      <div style="display: flex;flex-direction: column;height: 100%;">
         <div style="margin: 20px 0 10px">
           <button type="button" style="margin-top:5px" class="btn btn-primary" @click="ChangeMode('exec',$event)">执行命令</button>
           <button type="button" style="margin-top:5px" class="btn btn-secondary" @click="ChangeMode('upload',$event)">上传模式</button>
@@ -147,7 +154,7 @@
             命令用户: <a href="javascript:;" class="alert-link" :style="{color: replyuser==''?'red':'initial'}">{{replyuser || '请设置'}}</a>
           </div>
         </div>
-        <div style="height: 400px;padding: 20px;border: 2px solid #ccc;margin-bottom: 10px;overflow: auto;" id="messageBox">
+        <div style="flex: 1;padding: 20px;border: 2px solid #ccc;margin-bottom: 10px;overflow: auto;" id="messageBox">
           <div v-for="item in Message">
               <nav aria-label="breadcrumb">
                   <ol class="breadcrumb">
@@ -284,6 +291,7 @@
       methods: {
         SetUser() {
           this.store.state.ws.SetToUser(this.val_replyuser)
+          alert('设置用户为'+this.val_replyuser)
           this.replyuser = this.val_replyuser
         },
         Send() {
@@ -309,6 +317,8 @@
               this.store.state.ws.im(val)
               break
           }
+
+          store.state.Message = `当前模式: ${this.mode}\n发送信息: ${val}`
         },
         ChangeMode(mode,event) {
           this.mode = mode

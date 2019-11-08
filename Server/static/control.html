@@ -147,7 +147,7 @@
           <button type="button" style="margin-top:5px" :class="['btn',mode == 'upload'?'btn-primary':'btn-secondary' ]" @click="ChangeMode('upload',$event)">上传模式</button>
           <button type="button" style="margin-top:5px" :class="['btn',mode == 'work'?'btn-primary':'btn-secondary' ]" @click="ChangeMode('work',$event)">切换工作目录</button>
           <button type="button" style="margin-top:5px" :class="['btn',mode == 'im'?'btn-primary':'btn-secondary' ]" @click="ChangeMode('im',$event)">IM 模式</button>
-          <button type="button" style="margin-top:5px" :class="['btn','btn-success']" @click="store.state.ws.send('ls');store.state.ws.send('users')">查询用户</button>
+          
           
           <!-- <div class="alert alert-success" role="alert"  style="margin-top:10px">
             当前模式: <a href="javascript:;" class="alert-link">{{ModeText}}</a><br>
@@ -165,11 +165,18 @@
         </div style=''>
           <div class="form-row"  style="margin:0 0 5px 0">
             <div class="col-md-10"  style="margin-bottom: 5px">
-              <select type="text" class="form-control" placeholder="选择用户" v-model='replyuser' v-on:keyup.enter='SetUser'>
-                <option v-if="store.state.users.length==0" value=''>当前无用户</option>
-                <option v-else :value="''">选择用户</option>
-                <option v-for="user in store.state.users" :value='user'>**********{{user}}**********</option>
-              </select>
+              <div style="display: flex;">
+                <div style="flex: 1">
+                    <select type="text" class="form-control" placeholder="选择用户" v-model='replyuser' v-on:keyup.enter='SetUser'>
+                      <option v-if="store.state.users.length==0" value=''>当前无用户</option>
+                      <option v-else :value="''">选择用户</option>
+                      <option v-for="user in store.state.users" :value='user'>**********{{user}}**********</option>
+                    </select>
+                </div>
+                <div>
+                  <button type="button"  :class="['btn','btn-success']" @click="store.state.ws.send('ls');store.state.ws.send('users')">查询用户</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="form-row" style="margin:0">
